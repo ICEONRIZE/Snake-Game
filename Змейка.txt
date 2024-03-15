@@ -1,0 +1,159 @@
+import pygame
+import time
+import random
+
+pygame.init()
+
+# Установка экрана
+screen_width = 800
+screen_height = 600
+cell_size = 20
+difficulty = 10
+
+screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption('Birthday Snake Game')
+
+# Цвета
+white = (255, 255, 255)
+black = (0, 0, 0)
+red = (255, 0, 0)
+green = (0, 255, 0)
+
+# Задержка скорости
+clock = pygame.time.Clock()
+
+# Шрифт
+font = pygame.font.SysFont(None, 25)
+
+
+# Отрисовка змейки
+def snake(snake_size, snake_list):
+    for x in snake_list:
+        pygame.draw.rect(screen, green, [x[0], x[1], cell_size, cell_size])
+
+
+# Отрисовка сообщения на экране
+def message(msg, color, y_displace=0):
+    screen_text = font.render(msg, True, color)
+    screen.blit(screen_text, [screen_width / 2 - screen_text.get_width() / 2,
+                              screen_height / 2 - screen_text.get_height() / 2 + y_displace])
+
+
+# Отрисовка счета
+def show_score(score):
+    score_text = font.render("Score: " + str(score), True, black)
+    screen.blit(score_text, [10, 10])
+
+
+# Главное меню
+def game_intro():
+    intro = True
+
+    while intro:
+        screen.fill(white)
+        message("Welcome to Alexandr Georgievich", black, -50)
+        message("Press S to Start, Q to Quit", black, 50)
+
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_s:
+                    gameLoop()
+                if event.key == pygame.K_q:
+                    pygame.quit()
+                    quit()
+
+
+# Основная функция игры
+def gameLoop():
+    game_over = False
+    game_close = False
+    score = 0
+
+    # Начальное положение змейки
+    x = screen_width / 2
+    y = screen_height / 2
+
+    x_change = 0
+    y_change = 0
+
+    snake_list = []
+    snake_length = 1
+
+    # Положение фрукта
+    food_x = round(random.randrange(0, screen_width - cell_size) / cell_size) * cell_size
+    food_y = round(random.randrange(0, screen_height - cell_size) / cell_size) * cell_size
+
+    while not game_over:
+        while game_close == True:
+            screen.fill(white)
+            message("You Lost! Press Q-Quit or C-Play Again", red)
+            show_score(score)
+            pygame.display.update()
+
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_q:
+                        game_over = True
+                        game_close = False
+                    if event.key == pygame.K_c:
+                        gameLoop()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_over = True
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    x_change = -cell_size
+                    y_change = 0
+                elif event.key == pygame.K_RIGHT:
+                    x_change = cell_size
+                    y_change = 0
+                elif event.key == pygame.K_UP:
+                    y_change = -cell_size
+                    x_change = 0
+                elif event.key == pygame.K_DOWN:
+                    y_change = cell_size
+                    x_change = 0
+
+        if x >= screen_width or x < 0 or y >= screen_height or y < 0:
+            game_close = True
+
+        x += x_change
+        y += y_change
+        screen.fill(white)
+        pygame.draw.rect(screen, red, [food_x, food_y, cell_size, cell_size])
+
+        snake_head = []
+        snake_head.append(x)
+        snake_head.append(y)
+        snake_list.append(snake_head)
+        if len(snake_list) > snake_length:
+            del snake_list[0]
+
+        for segment in snake_list[:-1]:
+            if segment == snake_head:
+                game_close = True
+
+        snake(cell_size, snake_list)
+        show_score(score)
+
+        pygame.display.update()
+
+        if x == food_x and y == food_y:
+            food_x = round(random.randrange(0, screen_width - cell_size) / cell_size) * cell_size
+            food_y = round(random.randrange(0, screen_height - cell_size) / cell_size) * cell_size
+            snake_length += 1
+            score += 10
+
+        clock.tick(difficulty)
+
+    pygame.quit()
+    quit()
+
+
+game_intro()
